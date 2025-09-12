@@ -49,4 +49,19 @@ public class Falling : MonoBehaviour
 
         rb.MovePosition(next);
     }
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Obstacle"))
+        {
+            Debug.Log("Player died!");
+
+            // remove player
+            Destroy(gameObject);
+
+            
+            Time.timeScale = 0f;
+        }
+    }
 }
+
+

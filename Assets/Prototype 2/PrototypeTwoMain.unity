@@ -304,9 +304,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27b1b7921414b35459c272733fed18e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 1276660039}
-  smooth: 5
-  yOffset: 2
+  scrollSpeed: 6
 --- !u!114 &277360989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -351,6 +349,38 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!1 &908010671 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6281208994934514308, guid: 09e2867bbe53d634ea6a3b0294c29f3a, type: 3}
+  m_PrefabInstance: {fileID: 4644466336247066810}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &908010675
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 908010671}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &1276660035
 GameObject:
   m_ObjectHideFlags: 0
@@ -517,9 +547,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d6b4b9d6bd735f479f05966ad623ecf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fall: 6
-  move: 8
-  cam: 4.5
+  fallSpeed: 6
+  moveX: 8
+  moveY: 6
+  screenMargin: 0.4
 --- !u!1 &1718682485
 GameObject:
   m_ObjectHideFlags: 0
@@ -530,9 +561,11 @@ GameObject:
   m_Component:
   - component: {fileID: 1718682486}
   - component: {fileID: 1718682487}
+  - component: {fileID: 1718682489}
+  - component: {fileID: 1718682488}
   m_Layer: 0
   m_Name: GameObject
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -565,13 +598,86 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   obstaclePrefab: {fileID: 6281208994934514308, guid: 09e2867bbe53d634ea6a3b0294c29f3a, type: 3}
-  player: {fileID: 1276660039}
-  spawnInterval: 0.6
+  cam: {fileID: 0}
   xRange: {x: -4.5, y: 4.5}
-  appear: -10
+  spawnInterval: 0.6
+  objspawn: -10
   spacing: -4
-  rowdistance: 1
-  diff: 15
+  rowspawner: 1
+  diffTime: 15
+--- !u!50 &1718682488
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718682485}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
+--- !u!61 &1718682489
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718682485}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1001 &4644466336247066810
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -624,10 +730,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Obstacle
       objectReference: {fileID: 0}
+    - target: {fileID: 6281208994934514308, guid: 09e2867bbe53d634ea6a3b0294c29f3a, type: 3}
+      propertyPath: m_TagString
+      value: Obstacle
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6281208994934514308, guid: 09e2867bbe53d634ea6a3b0294c29f3a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 908010675}
   m_SourcePrefab: {fileID: 100100000, guid: 09e2867bbe53d634ea6a3b0294c29f3a, type: 3}
 --- !u!1001 &8846582970029695286
 PrefabInstance:
