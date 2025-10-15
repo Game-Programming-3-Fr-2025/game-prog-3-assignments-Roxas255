@@ -6,7 +6,7 @@ public class Projectile : MonoBehaviour
 
     private Rigidbody2D rb;
     private Collider2D col;
-    private Humans shooter; // to ignore hitting ourself
+    private Humans shooter; // to ignore hitting 
 
     void Awake()
     {
@@ -21,7 +21,7 @@ public class Projectile : MonoBehaviour
         this.shooter = shooter;
         rb.linearVelocity = velocity;
 
-        // Ignore collision with the shooter (if their collider exists)
+        // Ignore collision with the shooter
         if (shooter != null)
         {
             var shooterCol = shooter.GetComponent<Collider2D>();
@@ -31,7 +31,7 @@ public class Projectile : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        // If it hits player -> game over
+        // If it hits player then its  game over
         if (other.CompareTag("Player"))
         {
             Gamemanager.Instance.GameOver();
@@ -48,7 +48,7 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        // Hit walls/anything else: just delete
+        // Hit walls/anything else then just delete
         if (!other.isTrigger)
         {
             Die();

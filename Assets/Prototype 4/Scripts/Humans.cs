@@ -61,7 +61,7 @@ public class Humans : MonoBehaviour
         }
         else if (Current == State.Infected)
         {
-            // Chase nearest healthy
+            // Chase nearest healthy human
             Transform target = FindNearestHealthy();
             Vector2 dir = Vector2.zero;
 
@@ -78,7 +78,7 @@ public class Humans : MonoBehaviour
     {
         if (Current != State.Healthy) return;
         Current = State.Infected;
-        // Visual cue: tint red/green/etc.
+        // Visual cue red to show zombie
         var sr = GetComponent<SpriteRenderer>();
         if (sr) sr.color = new Color(0.9f, 0.2f, 0.2f);
     }
