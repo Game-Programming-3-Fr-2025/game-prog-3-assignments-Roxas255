@@ -5,7 +5,7 @@ using System.Collections;
 public class Gamemanager : MonoBehaviour
 {
     public static Gamemanager Instance { get; private set; }
-    [SerializeField] private float reloadDelay = 0f; // 0 = instant restart
+    [SerializeField] private float reloadDelay = 0f; 
     bool reloading;
 
     void Awake()
@@ -13,7 +13,7 @@ public class Gamemanager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
-
+    // Restart game when player dies
     public void GameOver()
     {
         if (reloading) return;

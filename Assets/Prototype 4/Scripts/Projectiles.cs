@@ -6,7 +6,7 @@ public class Projectile : MonoBehaviour
 
     private Rigidbody2D rb;
     private Collider2D col;
-    private Humans shooter; // to ignore hitting 
+    private Humans shooter; 
 
     void Awake()
     {

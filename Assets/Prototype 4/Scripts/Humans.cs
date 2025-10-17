@@ -37,7 +37,7 @@ public class Humans : MonoBehaviour
 
         if (Current == State.Healthy)
         {
-            // Flee from nearest infected (player or infected humans)
+            // Flee from nearest infected player or infected humans
             Transform threat = FindNearestInfected();
             Vector2 dir = Vector2.zero;
 
@@ -48,7 +48,7 @@ public class Humans : MonoBehaviour
 
             rb.linearVelocity = dir * healthySpeed;
 
-            // Optional: shoot at infected if guard and within range
+            // shoot at infected if guard is within range
             if (canShoot && Time.time >= nextShootTime && threat != null)
             {
                 float dist = Vector2.Distance(transform.position, threat.position);
@@ -78,7 +78,7 @@ public class Humans : MonoBehaviour
     {
         if (Current != State.Healthy) return;
         Current = State.Infected;
-        // Visual cue red to show zombie
+        // Change color to  red to show zombie
         var sr = GetComponent<SpriteRenderer>();
         if (sr) sr.color = new Color(0.9f, 0.2f, 0.2f);
     }
@@ -88,12 +88,12 @@ public class Humans : MonoBehaviour
         if (Current == State.Dead) return;
         Current = State.Dead;
         rb.linearVelocity = Vector2.zero;
-        // Visual cue: gray out and disable collider
+        // Change color to grey when zombie is hit by human
         var sr = GetComponent<SpriteRenderer>();
         if (sr) sr.color = Color.gray;
         var col = GetComponent<Collider2D>();
         if (col) col.enabled = false;
-        // Optionally destroy after delay:
+    
         Destroy(gameObject, 2f);
     }
 
