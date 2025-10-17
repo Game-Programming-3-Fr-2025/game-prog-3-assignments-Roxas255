@@ -33,10 +33,11 @@ public class Infectedplayer : MonoBehaviour
             return;
         }
 
-        
+
         if (other.CompareTag("Projectile"))
         {
             Gamemanager.Instance.GameOver();
         }
     }
 }
+

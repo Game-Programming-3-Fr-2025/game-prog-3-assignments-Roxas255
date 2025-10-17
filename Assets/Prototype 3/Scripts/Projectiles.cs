@@ -6,7 +6,7 @@ public class Projectile : MonoBehaviour
 
     private Rigidbody2D rb;
     private Collider2D col;
-    private Humans shooter; 
+    private Humans shooter;
 
     void Awake()
     {
@@ -57,3 +57,4 @@ public class Projectile : MonoBehaviour
 
     void Die() => Destroy(gameObject);
 }
+

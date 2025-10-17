@@ -5,7 +5,7 @@ using System.Collections;
 public class Gamemanager : MonoBehaviour
 {
     public static Gamemanager Instance { get; private set; }
-    [SerializeField] private float reloadDelay = 0f; 
+    [SerializeField] private float reloadDelay = 0f;
     bool reloading;
 
     void Awake()
@@ -31,3 +31,4 @@ public class Gamemanager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
+

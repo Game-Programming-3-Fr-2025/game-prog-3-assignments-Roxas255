@@ -93,7 +93,7 @@ public class Humans : MonoBehaviour
         if (sr) sr.color = Color.gray;
         var col = GetComponent<Collider2D>();
         if (col) col.enabled = false;
-    
+
         Destroy(gameObject, 2f);
     }
 
@@ -152,3 +152,4 @@ public class Humans : MonoBehaviour
         return best;
     }
 }
+
