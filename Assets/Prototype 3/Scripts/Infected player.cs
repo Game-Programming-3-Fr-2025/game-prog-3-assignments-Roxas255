@@ -1,29 +1,44 @@
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.InputSystem;   // ⬅️ NEW INPUT SYSTEM NAMESPACE
 
 public class Infectedplayer : MonoBehaviour
 {
     public float moveSpeed = 8f;
 
     private Rigidbody2D rb;
-    private Vector2 input;
+    private PlayerControls controls;   // auto-generated class from Input Actions
+    private Vector2 moveInput;         // stores WASD input
 
-    void Awake()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
+
+        // create controls object
+        controls = new PlayerControls();
+
+        // subscribe to Move action events
+        controls.Gameplay.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
+        controls.Gameplay.Move.canceled += ctx => moveInput = Vector2.zero;
     }
 
-    void Update()
+    private void OnEnable()
     {
-        input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+        controls.Gameplay.Enable();
     }
 
-    void FixedUpdate()
+    private void OnDisable()
     {
-        rb.linearVelocity = input * moveSpeed;
+        controls.Gameplay.Disable();
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    private void FixedUpdate()
+    {
+        // movement using linearVelocity (your style)
+        rb.linearVelocity = moveInput * moveSpeed;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
     {
         // Infect healthy humans on touch
         var human = other.GetComponent<Humans>();
@@ -33,11 +48,10 @@ public class Infectedplayer : MonoBehaviour
             return;
         }
 
-
+        // If hit by projectile → Game Over
         if (other.CompareTag("Projectile"))
         {
             Gamemanager.Instance.GameOver();
         }
     }
 }
-
