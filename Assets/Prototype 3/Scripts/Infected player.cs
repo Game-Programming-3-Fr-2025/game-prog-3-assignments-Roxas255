@@ -1,25 +1,38 @@
 ﻿using UnityEngine;
-using UnityEngine.InputSystem;   // ⬅️ NEW INPUT SYSTEM NAMESPACE
+using UnityEngine.InputSystem;   
 
 public class Infectedplayer : MonoBehaviour
 {
+    [Header("Movement")]
     public float moveSpeed = 8f;
 
+    [Header("Dash")]
+    public float dashSpeed = 20f;      // how fast the dash is 
+    public float dashDuration = 0.15f; // how long the dash lasts for
+    public float dashCooldown = 1.0f;  // cooldown for dash
+
     private Rigidbody2D rb;
-    private PlayerControls controls;   // auto-generated class from Input Actions
-    private Vector2 moveInput;         // stores WASD input
+    private PlayerControls controls;
+    private Vector2 moveInput;
+
+    private bool isDashing = false;
+    private float dashEndTime = 0f;
+    private float nextDashTime = 0f;
+    private Vector2 dashDirection;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
 
-        // create controls object
         controls = new PlayerControls();
 
-        // subscribe to Move action events
+        // Movement input 
         controls.Gameplay.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
         controls.Gameplay.Move.canceled += ctx => moveInput = Vector2.zero;
+
+        // Dash input
+        controls.Gameplay.Dash.performed += ctx => TryDash();
     }
 
     private void OnEnable()
@@ -34,8 +47,39 @@ public class Infectedplayer : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // movement using linearVelocity (your style)
-        rb.linearVelocity = moveInput * moveSpeed;
+        if (isDashing)
+        {
+            // During dash: override normal movement
+            rb.linearVelocity = dashDirection * dashSpeed;
+
+            // End dash after time
+            if (Time.time >= dashEndTime)
+            {
+                isDashing = false;
+            }
+        }
+        else
+        {
+            // Normal movement
+            rb.linearVelocity = moveInput * moveSpeed;
+        }
+    }
+
+    private void TryDash()
+    {
+        // Can't dash if on cooldown
+        if (Time.time < nextDashTime)
+            return;
+
+        // Can't dash if not moving
+        if (moveInput.sqrMagnitude <= 0.01f)
+            return;
+
+        // Start dashing
+        isDashing = true;
+        dashDirection = moveInput.normalized;
+        dashEndTime = Time.time + dashDuration;
+        nextDashTime = Time.time + dashCooldown;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -48,7 +92,7 @@ public class Infectedplayer : MonoBehaviour
             return;
         }
 
-        // If hit by projectile → Game Over
+        // If hit by projectile then Game Over
         if (other.CompareTag("Projectile"))
         {
             Gamemanager.Instance.GameOver();
