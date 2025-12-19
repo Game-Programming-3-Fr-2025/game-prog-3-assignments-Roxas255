@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Linq;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class Humans : MonoBehaviour
@@ -12,26 +11,35 @@ public class Humans : MonoBehaviour
     public float infectedSpeed = 5.5f;
 
     [Header("Healthy Behavior")]
-    public float fleeStartRange = 6f;   // start running if threat is closer than this
-    public float fleeStopRange = 7f;    // stop running once threat is farther than this (prevents jitter)
+    public float fleeStartRange = 6f;
+    public float fleeStopRange = 7f;
 
-    [Header("Shooting (for guards)")]
+    [Header("Shooting (guards only)")]
     public bool canShoot = false;
     public Projectile projectilePrefab;
     public float shootCooldown = 1.2f;
     public float shootRange = 7f;
     public float projectileSpeed = 12f;
 
-    private float nextShootTime = 0f;
-    private Rigidbody2D rb;
+    [Header("Sprites")]
+    public Sprite healthySprite;
+    public Sprite infectedSprite;
+    public Sprite deadSprite;
 
-    // remembers if this human is currently fleeing
+    private float nextShootTime;
     private bool isFleeing = false;
+
+    private Rigidbody2D rb;
+    private SpriteRenderer sr;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
+
+        sr = GetComponent<SpriteRenderer>();
+        if (sr && healthySprite)
+            sr.sprite = healthySprite;
     }
 
     void FixedUpdate()
@@ -44,87 +52,82 @@ public class Humans : MonoBehaviour
 
         if (Current == State.Healthy)
         {
-            // Flee only when infected source is within range; otherwise idle
-            Transform threat = FindNearestInfected();
-
-            if (threat == null)
-            {
-                isFleeing = false;
-                rb.linearVelocity = Vector2.zero;
-                return;
-            }
-
-            float dist = Vector2.Distance(transform.position, threat.position);
-
-            // Start fleeing if threat is close enough
-            if (!isFleeing && dist <= fleeStartRange)
-                isFleeing = true;
-
-            // Stop fleeing if threat is far enough
-            if (isFleeing && dist >= fleeStopRange)
-                isFleeing = false;
-
-            if (isFleeing)
-            {
-                Vector2 dir = ((Vector2)(transform.position - threat.position)).normalized;
-                rb.linearVelocity = dir * healthySpeed;
-            }
-            else
-            {
-                rb.linearVelocity = Vector2.zero;
-            }
-
-            // Guards shoot at infected if within range (even if standing still)
-            if (canShoot && Time.time >= nextShootTime)
-            {
-                if (dist <= shootRange)
-                {
-                    ShootAt(threat.position);
-                    nextShootTime = Time.time + shootCooldown;
-                }
-            }
+            HandleHealthy();
         }
         else if (Current == State.Infected)
         {
-            // Chase nearest healthy human
-            Transform target = FindNearestHealthy();
-            Vector2 dir = Vector2.zero;
-
-            if (target != null)
-            {
-                dir = ((Vector2)(target.position - transform.position)).normalized;
-            }
-
-            rb.linearVelocity = dir * infectedSpeed;
+            HandleInfected();
         }
+    }
+
+    void HandleHealthy()
+    {
+        Transform threat = FindNearestInfected();
+
+        if (!threat)
+        {
+            isFleeing = false;
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
+                            //When humans flee at certain range
+        float dist = Vector2.Distance(transform.position, threat.position);
+
+        if (!isFleeing && dist <= fleeStartRange)
+            isFleeing = true;
+
+        if (isFleeing && dist >= fleeStopRange)
+            isFleeing = false;
+
+        if (isFleeing)
+        {
+            Vector2 dir = ((Vector2)(transform.position - threat.position)).normalized;
+            rb.linearVelocity = dir * healthySpeed;
+        }
+        else
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        if (canShoot && Time.time >= nextShootTime && dist <= shootRange)
+        {
+            ShootAt(threat.position);
+            nextShootTime = Time.time + shootCooldown;
+        }
+    }
+                    //Infected tracks human
+    void HandleInfected()
+    {
+        Transform target = FindNearestHealthy();
+        Vector2 dir = Vector2.zero;
+
+        if (target)
+            dir = ((Vector2)(target.position - transform.position)).normalized;
+
+        rb.linearVelocity = dir * infectedSpeed;
     }
 
     public void Infect()
     {
         if (Current != State.Healthy) return;
+
         Current = State.Infected;
 
-        // Once infected, fleeing doesn't matter anymore
-        isFleeing = false;
-
-        // Change color to red to show zombie
-        var sr = GetComponent<SpriteRenderer>();
-        if (sr) sr.color = new Color(0.9f, 0.2f, 0.2f);
+        if (sr && infectedSprite)
+            sr.sprite = infectedSprite;
     }
 
     public void Die()
     {
         if (Current == State.Dead) return;
-        Current = State.Dead;
 
-        isFleeing = false;
+        Current = State.Dead;
         rb.linearVelocity = Vector2.zero;
 
-        // Change color to grey when zombie is hit by human
-        var sr = GetComponent<SpriteRenderer>();
-        if (sr) sr.color = Color.gray;
+        if (sr && deadSprite)
+            sr.sprite = deadSprite;
 
-        var col = GetComponent<Collider2D>();
+        Collider2D col = GetComponent<Collider2D>();
         if (col) col.enabled = false;
 
         Destroy(gameObject, 2f);
@@ -134,21 +137,19 @@ public class Humans : MonoBehaviour
     {
         if (Current == State.Dead) return;
 
-        // Infection spreads from infected humans
-        var otherHuman = other.GetComponent<Humans>();
-        if (Current == State.Healthy && otherHuman != null && otherHuman.Current == State.Infected)
+        Humans otherHuman = other.GetComponent<Humans>();
+        if (Current == State.Healthy && otherHuman && otherHuman.Current == State.Infected)
             Infect();
 
-        // Projectiles kill infected humans only
         if (Current == State.Infected && other.CompareTag("Projectile"))
             Die();
     }
 
     void ShootAt(Vector2 worldPos)
     {
-        if (projectilePrefab == null) return;
+        if (!projectilePrefab) return;
 
-        var p = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        Projectile p = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         Vector2 dir = (worldPos - (Vector2)transform.position).normalized;
         p.Launch(dir * projectileSpeed, shooter: this);
     }
@@ -161,34 +162,38 @@ public class Humans : MonoBehaviour
 
         foreach (var h in all)
         {
-            if (h == this) continue;
+            if (!h || h == this) continue;
             if (h.Current != State.Healthy) continue;
 
             float d = (h.transform.position - transform.position).sqrMagnitude;
-            if (d < bestDist) { bestDist = d; best = h.transform; }
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = h.transform;
+            }
         }
-
         return best;
     }
-
+                     //Tracks nearest infected to run away from
     Transform FindNearestInfected()
     {
-        // Player counts as infected source
-        var player = GameObject.FindGameObjectWithTag("Player");
-        Transform best = player != null ? player.transform : null;
-        float bestDist = best != null ? (best.position - transform.position).sqrMagnitude : float.MaxValue;
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        Transform best = player ? player.transform : null;
+        float bestDist = best ? (best.position - transform.position).sqrMagnitude : float.MaxValue;
 
         Humans[] all = FindObjectsByType<Humans>(FindObjectsSortMode.None);
-
         foreach (var h in all)
         {
-            if (h == this) continue;
+            if (!h || h == this) continue;
             if (h.Current != State.Infected) continue;
 
             float d = (h.transform.position - transform.position).sqrMagnitude;
-            if (d < bestDist) { bestDist = d; best = h.transform; }
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = h.transform;
+            }
         }
-
         return best;
     }
 }

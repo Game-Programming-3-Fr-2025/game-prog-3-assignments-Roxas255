@@ -49,7 +49,7 @@ public class Infectedplayer : MonoBehaviour
     {
         if (isDashing)
         {
-            // During dash: override normal movement
+            // During dash it override normal movement
             rb.linearVelocity = dashDirection * dashSpeed;
 
             // End dash after time

@@ -27,7 +27,7 @@ public class PlayerTracker : MonoBehaviour
 
         UpdateArrowAndText();
     }
-
+                        // Tracker 
     Humans FindTarget()
     {
         Humans[] all = FindObjectsByType<Humans>(FindObjectsSortMode.None);
@@ -56,7 +56,7 @@ public class PlayerTracker : MonoBehaviour
 
         return best;
     }
-
+                      //Updates the arrow to closest human and Distance text
     void UpdateArrowAndText()
     {
         if (!currentTarget)
