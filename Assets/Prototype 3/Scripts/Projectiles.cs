@@ -12,26 +12,41 @@ public class Projectile : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0f;
+
         col = GetComponent<Collider2D>();
+
+        // Destroy after some time 
         Invoke(nameof(Die), lifeSeconds);
     }
 
     public void Launch(Vector2 velocity, Humans shooter)
     {
         this.shooter = shooter;
+
+        // Move projectile
         rb.linearVelocity = velocity;
+
+        // Rotate projectile to face movement direction
+        if (velocity.sqrMagnitude > 0.0001f)
+        {
+            float angle = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        }
 
         // Ignore collision with the shooter
         if (shooter != null)
         {
             var shooterCol = shooter.GetComponent<Collider2D>();
-            if (shooterCol && col) Physics2D.IgnoreCollision(col, shooterCol, true);
+            if (shooterCol && col)
+            {
+                Physics2D.IgnoreCollision(col, shooterCol, true);
+            }
         }
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        // If it hits player then its  game over
+        // If it hits the player then game over
         if (other.CompareTag("Player"))
         {
             Gamemanager.Instance.GameOver();
@@ -39,7 +54,7 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        // If it hits infected human, they die
+        // If it hits an infected human it kill them
         var human = other.GetComponent<Humans>();
         if (human != null && human.Current == Humans.State.Infected)
         {
@@ -48,13 +63,15 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        // Hit walls/anything else then just delete
+        // Hit anything solid it dies
         if (!other.isTrigger)
         {
             Die();
         }
     }
 
-    void Die() => Destroy(gameObject);
+    void Die()
+    {
+        Destroy(gameObject);
+    }
 }
-

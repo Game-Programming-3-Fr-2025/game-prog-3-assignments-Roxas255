@@ -11,6 +11,10 @@ public class Humans : MonoBehaviour
     public float healthySpeed = 4f;
     public float infectedSpeed = 5.5f;
 
+    [Header("Healthy Behavior")]
+    public float fleeStartRange = 6f;   // start running if threat is closer than this
+    public float fleeStopRange = 7f;    // stop running once threat is farther than this (prevents jitter)
+
     [Header("Shooting (for guards)")]
     public bool canShoot = false;
     public Projectile projectilePrefab;
@@ -20,6 +24,9 @@ public class Humans : MonoBehaviour
 
     private float nextShootTime = 0f;
     private Rigidbody2D rb;
+
+    // remembers if this human is currently fleeing
+    private bool isFleeing = false;
 
     void Awake()
     {
@@ -37,21 +44,39 @@ public class Humans : MonoBehaviour
 
         if (Current == State.Healthy)
         {
-            // Flee from nearest infected player or infected humans
+            // Flee only when infected source is within range; otherwise idle
             Transform threat = FindNearestInfected();
-            Vector2 dir = Vector2.zero;
 
-            if (threat != null)
+            if (threat == null)
             {
-                dir = ((Vector2)(transform.position - threat.position)).normalized;
+                isFleeing = false;
+                rb.linearVelocity = Vector2.zero;
+                return;
             }
 
-            rb.linearVelocity = dir * healthySpeed;
+            float dist = Vector2.Distance(transform.position, threat.position);
 
-            // shoot at infected if guard is within range
-            if (canShoot && Time.time >= nextShootTime && threat != null)
+            // Start fleeing if threat is close enough
+            if (!isFleeing && dist <= fleeStartRange)
+                isFleeing = true;
+
+            // Stop fleeing if threat is far enough
+            if (isFleeing && dist >= fleeStopRange)
+                isFleeing = false;
+
+            if (isFleeing)
             {
-                float dist = Vector2.Distance(transform.position, threat.position);
+                Vector2 dir = ((Vector2)(transform.position - threat.position)).normalized;
+                rb.linearVelocity = dir * healthySpeed;
+            }
+            else
+            {
+                rb.linearVelocity = Vector2.zero;
+            }
+
+            // Guards shoot at infected if within range (even if standing still)
+            if (canShoot && Time.time >= nextShootTime)
+            {
                 if (dist <= shootRange)
                 {
                     ShootAt(threat.position);
@@ -78,7 +103,11 @@ public class Humans : MonoBehaviour
     {
         if (Current != State.Healthy) return;
         Current = State.Infected;
-        // Change color to  red to show zombie
+
+        // Once infected, fleeing doesn't matter anymore
+        isFleeing = false;
+
+        // Change color to red to show zombie
         var sr = GetComponent<SpriteRenderer>();
         if (sr) sr.color = new Color(0.9f, 0.2f, 0.2f);
     }
@@ -87,10 +116,14 @@ public class Humans : MonoBehaviour
     {
         if (Current == State.Dead) return;
         Current = State.Dead;
+
+        isFleeing = false;
         rb.linearVelocity = Vector2.zero;
+
         // Change color to grey when zombie is hit by human
         var sr = GetComponent<SpriteRenderer>();
         if (sr) sr.color = Color.gray;
+
         var col = GetComponent<Collider2D>();
         if (col) col.enabled = false;
 
@@ -101,7 +134,7 @@ public class Humans : MonoBehaviour
     {
         if (Current == State.Dead) return;
 
-        // Infection spreads from player or infected humans
+        // Infection spreads from infected humans
         var otherHuman = other.GetComponent<Humans>();
         if (Current == State.Healthy && otherHuman != null && otherHuman.Current == State.Infected)
             Infect();
@@ -114,6 +147,7 @@ public class Humans : MonoBehaviour
     void ShootAt(Vector2 worldPos)
     {
         if (projectilePrefab == null) return;
+
         var p = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
         Vector2 dir = (worldPos - (Vector2)transform.position).normalized;
         p.Launch(dir * projectileSpeed, shooter: this);
@@ -124,13 +158,16 @@ public class Humans : MonoBehaviour
         Humans[] all = FindObjectsByType<Humans>(FindObjectsSortMode.None);
         Transform best = null;
         float bestDist = float.MaxValue;
+
         foreach (var h in all)
         {
             if (h == this) continue;
             if (h.Current != State.Healthy) continue;
+
             float d = (h.transform.position - transform.position).sqrMagnitude;
             if (d < bestDist) { bestDist = d; best = h.transform; }
         }
+
         return best;
     }
 
@@ -142,13 +179,16 @@ public class Humans : MonoBehaviour
         float bestDist = best != null ? (best.position - transform.position).sqrMagnitude : float.MaxValue;
 
         Humans[] all = FindObjectsByType<Humans>(FindObjectsSortMode.None);
+
         foreach (var h in all)
         {
             if (h == this) continue;
             if (h.Current != State.Infected) continue;
+
             float d = (h.transform.position - transform.position).sqrMagnitude;
             if (d < bestDist) { bestDist = d; best = h.transform; }
         }
+
         return best;
     }
 }
